@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sobre nosotros | Mora y Deuda</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+        content="Conocé quiénes estamos detrás de Mora y Deuda, la herramienta para visualizar tu informe BCRA de manera simple.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-white min-h-screen">
+  <div class="max-w-4xl mx-auto p-4 md:p-8">
+    <header class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <a href="/" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+          <i class="fas fa-arrow-left"></i> Volver al inicio
+        </a>
+        <a href="/" class="text-xs text-gray-500 hover:text-gray-300">Mora y Deuda</a>
+      </div>
+      <!-- LOGO -->
+      <div class="flex justify-center">
+        <div class="w-full max-w-md">
+          <svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+            <rect width="340" height="110" rx="18" fill="#111827"/>
+            <path d="M75 38 L95 18 L115 38 Z" fill="#3b82f6"/>
+            <rect x="205" y="25" width="9" height="45" fill="#3b82f6"/>
+            <rect x="218" y="35" width="9" height="35" fill="#3b82f6"/>
+            <rect x="231" y="18" width="9" height="52" fill="#ef4444"/>
+            <line x1="265" y1="32" x2="290" y2="57" stroke="#ef4444" stroke-width="5"/>
+            <line x1="265" y1="57" x2="290" y2="32" stroke="#ef4444" stroke-width="5"/>
+            <text x="165" y="48" text-anchor="middle" fill="#3b82f6"
+                  font-family="Arial Black, sans-serif" font-size="29" font-weight="900">MORA</text>
+            <text x="165" y="72" text-anchor="middle" fill="#ef4444"
+                  font-family="Arial Black, sans-serif" font-size="23" font-weight="900">Y DEUDA</text>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <h1 class="text-3xl md:text-4xl font-bold mb-4">Sobre Mora y Deuda</h1>
+    <p class="text-gray-400 mb-8 max-w-2xl">
+      Mora y Deuda es una herramienta independiente para visualizar, entender y monitorear
+      tu situación crediticia y tu historial de cheques rechazados a partir de datos públicos
+      del Banco Central de la República Argentina (BCRA).
+    </p>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-3">Quiénes somos</h2>
+      <p class="text-gray-300 mb-3">
+        Esta herramienta fue desarrollada por profesionales de economía y análisis de datos
+        interesados en acercar la información financiera a personas y empresas de forma clara,
+        visual y accesible.
+      </p>
+      <p class="text-gray-300">
+        No somos el BCRA ni una entidad financiera. Somos un proyecto independiente que utiliza
+        fuentes oficiales para ayudarte a interpretar mejor tu situación crediticia.
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-3">Qué hace esta herramienta</h2>
+      <p class="text-gray-300 mb-3">
+        A partir de un CUIT/CUIL, Mora y Deuda consulta APIs públicas del BCRA y presenta la
+        información en un panel con gráficos, tablas y descargas en PDF/Excel para facilitar
+        el análisis de:
+      </p>
+      <ul class="list-disc list-inside text-gray-300 space-y-1">
+        <li>Deuda bancaria por entidad y por período.</li>
+        <li>Situaciones de riesgo (0 a 5) a lo largo del tiempo.</li>
+        <li>Cheques rechazados, montos y cantidades mensuales.</li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-3">Cómo usamos la información</h2>
+      <p class="text-gray-300 mb-3">
+        La herramienta consulta datos públicos y los procesa para mostrarlos de forma ordenada.
+        No solicitamos contraseñas ni datos bancarios sensibles.
+      </p>
+      <p class="text-gray-300">
+        Utilizamos tecnologías como cookies y herramientas de analítica y publicidad para
+        mejorar el servicio y mantener el proyecto. Los detalles se encuentran en nuestra
+        <a href="/privacidad.html" class="text-blue-400 hover:underline">
+          Política de privacidad
+        </a>.
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-3">Limitaciones y descargo de responsabilidad</h2>
+      <p class="text-gray-300 mb-3">
+        Los datos mostrados dependen de la información disponible en las fuentes oficiales y
+        pueden tener demoras o inconsistencias ajenas a este sitio.
+      </p>
+      <p class="text-gray-300">
+        Mora y Deuda no brinda asesoramiento legal ni financiero. Recomendamos contrastar la
+        información con tu banco o con el BCRA y, en caso de duda, consultar a un profesional.
+      </p>
+    </section>
+
+    <footer class="mt-12 border-t border-gray-800 pt-4 text-xs text-gray-500 flex flex-wrap gap-4 justify-between">
+      <span>© Mora y Deuda</span>
+      <div class="flex flex-wrap gap-3">
+        <a href="/sobre-nosotros.html" class="hover:text-gray-300">Sobre nosotros</a>
+        <a href="/privacidad.html" class="hover:text-gray-300">Privacidad</a>
+        <a href="/terminos.html" class="hover:text-gray-300">Términos</a>
+        <a href="/contacto.html" class="hover:text-gray-300">Contacto</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
