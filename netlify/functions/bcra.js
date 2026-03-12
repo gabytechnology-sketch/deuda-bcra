@@ -1,78 +1,80 @@
-// netlify/functions/bcra.js
+const fs = require('fs');
+const path = require('path');
 
-const BASE = "https://api.bcra.gob.ar/centraldedeudores/v1.0";
+const CACHE_FILE = path.join('/tmp', 'bcra-cache.json');
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
-exports.handler = async (event, context) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, OPTIONS"
+// Cargamos el caché (si existe)
+let cache = {};
+if (fs.existsSync(CACHE_FILE)) {
+  try {
+    cache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
+  } catch (e) {}
+}
+
+exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: ""
-    };
-  }
-
   try {
-    const params = event.queryStringParameters || {};
-    const cuit = (params.cuit || "").replace(/\D/g, "");
-    const tipo = params.tipo || "actual";
+    const cuit = event.queryStringParameters?.cuit || event.path.split('/').pop();
 
-    if (!/^\d{11}$/.test(cuit)) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: "CUIT inválido (11 dígitos)" })
-      };
+    if (!cuit || cuit.length !== 11 || isNaN(cuit)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "CUIT inválido. Debe tener 11 dígitos." }) };
     }
 
-    let endpoint;
-    switch (tipo) {
-      case "actual":
-        endpoint = `${BASE}/Deudas/${cuit}`;
-        break;
-      case "historica":
-        endpoint = `${BASE}/Deudas/Historicas/${cuit}`;
-        break;
-      case "cheques":
-        endpoint = `${BASE}/Deudas/ChequesRechazados/${cuit}`;
-        break;
-      default:
-        return {
-          statusCode: 400,
-          headers: corsHeaders,
-          body: JSON.stringify({ error: "Tipo inválido" })
-        };
+    const now = Date.now();
+    const cacheKey = cuit;
+
+    // ¿Está en caché y es fresco?
+    if (cache[cacheKey] && (now - cache[cacheKey].timestamp) < CACHE_DURATION) {
+      console.log(`✅ Caché hit para ${cuit}`);
+      return { statusCode: 200, headers, body: JSON.stringify(cache[cacheKey].data) };
     }
 
-    const resp = await fetch(endpoint);
-    const data = await resp.json();
+    // === AQUÍ EXPLOTAMOS LA API DEL BCRA ===
+    console.log(`🔄 Consultando BCRA para ${cuit}`);
 
-    if (!resp.ok) {
-      return {
-        statusCode: resp.status,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          error: data?.errorMessages?.[0] || `Error BCRA (${resp.status})`
-        })
-      };
-    }
+    const base = 'https://api.bcra.gob.ar/centraldedeudores/v1.0';
 
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify(data)
+    const [deudasRes, historicasRes, chequesRes] = await Promise.all([
+      fetch(`${base}/Deudas/${cuit}`),
+      fetch(`${base}/Deudas/Historicas/${cuit}`),
+      fetch(`${base}/Deudas/ChequesRechazados/${cuit}`)
+    ]);
+
+    const deudas = await deudasRes.json();
+    const historicas = await historicasRes.json();
+    const cheques = await chequesRes.json();
+
+    const resultado = {
+      status: 200,
+      denominacion: deudas.results?.denominacion || "No encontrado",
+      deudas: deudas,
+      historicas: historicas,
+      cheques: cheques
     };
-  } catch (err) {
-    console.error(err);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: "Error interno en proxy BCRA" })
+
+    // Guardamos en caché
+    cache[cacheKey] = {
+      timestamp: now,
+      data: resultado
+    };
+
+    // Guardamos el archivo caché
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
+
+    return { statusCode: 200, headers, body: JSON.stringify(resultado) };
+
+  } catch (error) {
+    console.error(error);
+    return { 
+      statusCode: 500, 
+      headers, 
+      body: JSON.stringify({ error: "Error temporal del BCRA. Intenta de nuevo en unos segundos." }) 
     };
   }
 };
