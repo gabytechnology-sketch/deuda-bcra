@@ -1,8 +1,7 @@
 [build]
-  publish = "."                  # publica desde la raíz del repo (donde está index.html)
-  command = ""                   # no hace falta build step (es HTML + JS estático + functions)
-  functions = "netlify/functions"  # apunta EXACTAMENTE a tu carpeta
+  publish = "."
+  command = ""  # vacío para skip build innecesario
+  functions = "netlify/functions"  # legacy key, algunos casos lo necesitan
 
-# Opcional: fuerza rebuild de functions
 [functions]
-  directory = "netlify/functions"
+  directory = "netlify/functions"  # clave moderna recomendada en 2026
