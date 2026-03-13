@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Central de Deudores - BCRA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .situacion-1 { background-color: #dcfce7; color: #166534; }
+        .situacion-2 { background-color: #fef3c7; color: #854d0e; }
+        .situacion-3 { background-color: #fee2e2; color: #991b1b; }
+        .situacion-4 { background-color: #fecaca; color: #991b1b; }
+        .situacion-5 { background-color: #7f1d1d; color: white; }
+        .tabla th, .tabla td { padding: 12px; text-align: left; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-5xl mx-auto p-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-blue-900">Central de Deudores</h1>
+                <p class="text-gray-600 mt-1">Consulta oficial de deudas informadas al BCRA</p>
+            </div>
+            <a href="https://www.bcra.gob.ar" target="_blank" 
+               class="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                <span>Ir al sitio oficial del BCRA</span>
+                <span class="text-xl">↗</span>
+            </a>
+        </div>
+
+        <!-- Formulario -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="max-w-md mx-auto">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ingresa tu CUIT/CUIL/CDI (11 dígitos sin guiones)</label>
+                <div class="flex gap-3">
+                    <input 
+                        id="cuit"
+                        type="text" 
+                        maxlength="11"
+                        placeholder="20301234567"
+                        class="flex-1 border border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:border-blue-500 font-mono"
+                        onkeypress="if(event.key === 'Enter') consultar()">
+                    
+                    <button 
+                        onclick="consultar()"
+                        class="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-8 py-4 rounded-xl transition-all flex items-center gap-2">
+                        <span>Consultar</span>
+                        <span class="text-xl">🔍</span>
+                    </button>
+                </div>
+
+                <!-- Opción proxy para CORS -->
+                <div class="mt-4 flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="usarProxy" class="w-4 h-4">
+                    <label for="usarProxy" class="text-gray-600 cursor-pointer">
+                        Usar proxy (para evitar error CORS en pruebas locales)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultado" class="mt-8 hidden">
+            <!-- Se llena con JavaScript -->
+        </div>
+
+        <!-- Footer info -->
+        <div class="mt-12 text-center text-xs text-gray-500">
+            <p>Datos públicos obtenidos directamente de la API oficial del BCRA</p>
+            <p class="mt-1">API: <span class="font-mono text-blue-600">https://api.bcra.gob.ar/CentralDeDeudores/v1.0/Deudas/{cuit}</span></p>
+            <p class="mt-3">Esta es una herramienta de demostración. Los datos son oficiales pero siempre verifica en el sitio del BCRA.</p>
+        </div>
+    </div>
+
+    <script>
+        async function consultar() {
+            const cuitInput = document.getElementById('cuit').value.trim();
+            const resultadoDiv = document.getElementById('resultado');
+            
+            // Validación
+            if (!/^\d{11}$/.test(cuitInput)) {
+                alert('❌ El CUIT/CUIL/CDI debe tener exactamente 11 dígitos numéricos.');
+                return;
+            }
+
+            resultadoDiv.classList.remove('hidden');
+            resultadoDiv.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-xl p-12 text-center">
+                    <div class="animate-spin w-12 h-12 border-4 border-blue-200 border-t-blue-700 rounded-full mx-auto"></div>
+                    <p class="mt-6 text-gray-600">Consultando en la Central de Deudores del BCRA...</p>
+                </div>
+            `;
+
+            const usarProxy = document.getElementById('usarProxy').checked;
+            const baseUrl = `https://api.bcra.gob.ar/CentralDeDeudores/v1.0/Deudas/${cuitInput}`;
+            const url = usarProxy 
+                ? `https://corsproxy.io/?${encodeURIComponent(baseUrl)}` 
+                : baseUrl;
+
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status !== 200 || !data.results) {
+                    throw new Error('No se encontraron datos o respuesta inválida');
+                }
+
+                renderizarReporte(data.results, cuitInput);
+
+            } catch (error) {
+                resultadoDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+                        <p class="text-6xl mb-4">⚠️</p>
+                        <p class="text-red-700 font-medium text-xl">Error al consultar la API</p>
+                        <p class="text-red-600 mt-2">${error.message}</p>
+                        <div class="mt-8 text-left bg-white p-6 rounded-xl text-sm">
+                            <strong>Posibles soluciones:</strong><br>
+                            1. Activa el checkbox "Usar proxy" y prueba de nuevo.<br>
+                            2. Para producción usa un backend (Node, Python, etc.) como proxy.<br>
+                            3. Prueba directamente en Postman o Insomnia con la URL:
+                            <code class="block bg-gray-100 p-3 mt-2 text-xs font-mono">https://api.bcra.gob.ar/CentralDeDeudores/v1.0/Deudas/${cuitInput}</code>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarReporte(results, cuit) {
+            const resultadoDiv = document.getElementById('resultado');
+            
+            let html = `
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <!-- Cabecera -->
+                    <div class="bg-gradient-to-r from-blue-700 to-blue-800 text-white p-8">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-blue-200 text-sm">CUIT / CUIL / CDI</p>
+                                <p class="text-5xl font-mono font-bold">${cuit}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-blue-200 text-sm">Nombre / Razón social</p>
+                                <p class="text-2xl font-semibold">${results.denominacion || 'No disponible'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="p-8">
+                        ${results.periodos && results.periodos.length > 0 
+                            ? results.periodos.map((periodo, index) => `
+                                <div class="mb-10">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="bg-blue-100 text-blue-800 text-xs font-bold px-4 py-2 rounded-full">
+                                            PERÍODO ${periodo.periodo}
+                                        </div>
+                                        ${index === 0 ? '<span class="text-emerald-600 text-sm font-medium">← Último informe</span>' : ''}
+                                    </div>
+
+                                    <table class="tabla w-full border-collapse bg-white rounded-2xl overflow-hidden shadow">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="font-medium text-left">Entidad</th>
+                                                <th class="font-medium text-center">Situación</th>
+                                                <th class="font-medium text-right">Monto</th>
+                                                <th class="font-medium text-center">Días de atraso</th>
+                                                <th class="font-medium text-center">Refinanciado</th>
+                                                <th class="font-medium text-center">Proceso judicial</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${periodo.entidades.map(ent => `
+                                                <tr class="border-t hover:bg-gray-50">
+                                                    <td class="font-medium">${ent.entidad}</td>
+                                                    <td class="text-center">
+                                                        <span class="px-5 py-1 rounded-full text-xs font-bold situacion-${ent.situacion}">
+                                                            ${ent.situacion}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-right font-mono font-semibold">
+                                                        $${Number(ent.monto || 0).toLocaleString('es-AR')}
+                                                    </td>
+                                                    <td class="text-center">${ent.diasAtrasoPago || 0}</td>
+                                                    <td class="text-center">${ent.refinanciaciones ? '✅' : '❌'}</td>
+                                                    <td class="text-center">${ent.procesoJud ? '⚖️' : '—'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `).join('')
+                            : '<p class="text-center text-gray-400 py-12">No hay deudas informadas en el último período.</p>'
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center text-xs text-gray-400">
+                    Datos actualizados según el último informe enviado al BCRA • API v1.0
+                </div>
+            `;
+
+            resultadoDiv.innerHTML = html;
+        }
+
+        // Tailwind script (se ejecuta al cargar)
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('%c✅ HTML de consulta BCRA listo. Ingresa un CUIT de 11 dígitos.', 'color: #1e40af; font-weight: bold');
+        });
+    </script>
+</body>
+</html>
