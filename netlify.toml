@@ -1,7 +1,0 @@
-[build]
-  publish = "."
-  command = ""  # vacío para skip build innecesario
-  functions = "netlify/functions"  # legacy key, algunos casos lo necesitan
-
-[functions]
-  directory = "netlify/functions"  # clave moderna recomendada en 2026
